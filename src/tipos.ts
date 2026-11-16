@@ -1,22 +1,20 @@
-export interface Livros {
-
-    readonly id:number,
-    titulo:string,
-    autor:string,
-    ano:number,
-    disponivel:boolean
-
+export interface Livro {
+  readonly id: number;
+  titulo: string;
+  autor: string;
+  ano: number;
+  disponivel: boolean;
 }
 
-export type LivroNovo = Omit<Livros, 'id'>;
-
+export type LivroNovo = Omit<Livro, 'id'>;
 export type LivroParcial = Partial<LivroNovo>;
 
-export enum StatusCode {
-    OK = 200,
-    CREATED = 201,
-    NOCONTENT = 204, //DELETE
-    NOTFOUND = 404, 
-    METODONAOPERMITIDO = 405,
-    ENTIDADEINVALIDA = 422,
+export enum StatusHttp {
+  OK = 200,
+  Criado = 201,
+  SemConteudo = 204,
+  RequisicaoInvalida = 400,
+  NaoEncontrado = 404,
+  MetodoNaoPermitido = 405,
+  EntidadeInvalida = 422,
 }

@@ -1,48 +1,49 @@
-import express, { Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 import * as repositorio from './livros';
-import * as Tipos from './tipos';
+import { StatusHttp } from './tipos';
 import { ehLivroNovo, ehLivroParcial, lerId } from './validacao';
-import { error } from 'node:console';
-
 
 const app = express();
+const PORTA = 3000;
+
+app.disable('x-powered-by');
 app.use(express.json());
-const PORT = 3000;
 
-app.get('/', (req, res) => {
-    let mensagem: string = "API de Biblioteca Rodando";
-    res.status(200).json(mensagem);//ou {mensagem: 'servidor rodando blabla'}
-});
+const NAO_ENCONTRADO = 'Livro não encontrado';
+const ID_INVALIDO = 'Id inválido';
 
-app.listen(PORT, () => {
-    let mensagem: string = " Servidor rodando em http://localhost:" + PORT;
-    console.log(mensagem);
-});
+function responderErro(res: Response, status: StatusHttp, mensagem: string): void {
+  res.status(status).json({ erro: mensagem });
+}
 
+function listarLivros(req: Request, res: Response): void {
+  res.status(StatusHttp.OK).json(repositorio.listar());
+}
 
-    /* MAGICA DO EXPRESS, 
-    EU ESTAVA COM DUVIDA DE COMO ELE SABIA Q '/LIVROS/:ID'
-    COMO ELE SABIA Q :ID  ERA REALMENTE UMA VARIAVEL DE LIVRO E NÃO 
-    UMA STRING, JA QUE ESTA ENTRE ASPAS????
-    É PORQUE O EXPRESSSSSS RECONHECE :ID COMO UMA LACUNA NA ROTA
-    E SE EU PASSAR 10 POR EXEMPLO, O REQ.PARAMS.ID FAZ ISSO AQUI:
-    {
-        ID:10
-    }
-    WOOOWW É MAGICA! :) */
+function listarDisponiveis(req: Request, res: Response): void {
+  res.status(StatusHttp.OK).json(repositorio.listarDisponiveis());
+}
 
 function buscarLivro(req: Request<{ id: string }>, res: Response): void {
   const id = lerId(req.params.id);
   if (id === undefined) {
-    res.status(Tipos.StatusCode.NOCONTENT).json({"erro": "id invalido"});
+    return responderErro(res, StatusHttp.RequisicaoInvalida, ID_INVALIDO);
   }
   const livro = repositorio.buscar(id);
   if (!livro) {
-    res.status(Tipos.StatusCode.NOTFOUND).json({"erro": "livro não encontrado"});
+    return responderErro(res, StatusHttp.NaoEncontrado, NAO_ENCONTRADO);
   }
-  res.status(Tipos.StatusCode.OK).json(livro);
+  res.status(StatusHttp.OK).json(livro);
 }
 
+function criarLivro(req: Request, res: Response): void {
+  const corpo: unknown = req.body;
+  if (!ehLivroNovo(corpo)) {
+    return responderErro(res, StatusHttp.EntidadeInvalida, 'Campos obrigatórios: titulo, autor e ano');
+  }
+  const novo = repositorio.criar({ ...corpo, disponivel: corpo.disponivel ?? true });
+  res.status(StatusHttp.Criado).location(`/livros/${novo.id}`).json(novo);
+}
 
 function substituirLivro(req: Request<{ id: string }>, res: Response): void {
   const id = lerId(req.params.id);
@@ -59,3 +60,62 @@ function substituirLivro(req: Request<{ id: string }>, res: Response): void {
   }
   res.status(StatusHttp.OK).json(livro);
 }
+
+function atualizarLivro(req: Request<{ id: string }>, res: Response): void {
+  const id = lerId(req.params.id);
+  const corpo: unknown = req.body;
+  if (id === undefined) {
+    return responderErro(res, StatusHttp.RequisicaoInvalida, ID_INVALIDO);
+  }
+  if (!ehLivroParcial(corpo)) {
+    return responderErro(res, StatusHttp.EntidadeInvalida, 'Campos com tipo inválido');
+  }
+  const livro = repositorio.atualizar(id, corpo);
+  if (!livro) {
+    return responderErro(res, StatusHttp.NaoEncontrado, NAO_ENCONTRADO);
+  }
+  res.status(StatusHttp.OK).json(livro);
+}
+
+function removerLivro(req: Request<{ id: string }>, res: Response): void {
+  const id = lerId(req.params.id);
+  if (id === undefined) {
+    return responderErro(res, StatusHttp.RequisicaoInvalida, ID_INVALIDO);
+  }
+  if (!repositorio.remover(id)) {
+    return responderErro(res, StatusHttp.NaoEncontrado, NAO_ENCONTRADO);
+  }
+  res.status(StatusHttp.SemConteudo).end();
+}
+
+function metodoNaoPermitido(req: Request, res: Response): void {
+  responderErro(res, StatusHttp.MetodoNaoPermitido, `Método ${req.method} não permitido nesta URI`);
+}
+
+// Parte 1 — verificação do ambiente
+app.get('/', (req, res) => {
+  res.status(StatusHttp.OK).json({ mensagem: 'API da biblioteca no ar' });
+});
+
+// Específica antes da genérica
+app.get('/livros/disponiveis', listarDisponiveis);
+
+app.route('/livros')
+  .get(listarLivros)
+  .post(criarLivro)
+  .all(metodoNaoPermitido);
+
+app.route('/livros/:id')
+  .get(buscarLivro)
+  .put(substituirLivro)
+  .patch(atualizarLivro)
+  .delete(removerLivro)
+  .all(metodoNaoPermitido);
+
+app.use((req, res) => {
+  responderErro(res, StatusHttp.NaoEncontrado, `Rota ${req.method} ${req.path} não encontrada`);
+});
+
+app.listen(PORTA, () => {
+  console.log(`Servidor rodando em http://localhost:${PORTA}`);
+});
