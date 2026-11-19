@@ -2,11 +2,13 @@ import express, { Request, Response } from 'express';
 import * as repositorio from './livros';
 import { StatusHttp } from './tipos';
 import { ehLivroNovo, ehLivroParcial, lerId } from './validacao';
+import { registrarRequisicao } from './middlewares/registrar-aquisicao';
 
 const app = express();
 const PORTA = 3000;
 
 app.disable('x-powered-by');
+app.use(registrarRequisicao); // primeiro da fila do next
 app.use(express.json());
 
 const NAO_ENCONTRADO = 'Livro não encontrado';
