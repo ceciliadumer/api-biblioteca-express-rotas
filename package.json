@@ -1,15 +1,17 @@
 {
-  "name": "api-biblioteca",
+  "name": "api-express",
   "version": "1.0.0",
-  "description": "Gabarito do Simulado da Prova Prática 01 — Desenvolvimento Backend II",
-  "main": "dist/servidor.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/servidor.ts",
     "build": "tsc",
     "start": "node dist/servidor.js"
   },
-  "author": "Prof. Matheus Oliveira Jagi",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
     "express": "^5.3.0"
   },
