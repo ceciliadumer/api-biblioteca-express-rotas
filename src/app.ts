@@ -11,7 +11,6 @@ app.disable('x-powered-by');
 
 app.use(registrarRequisicao);
 app.use(express.json({ limit: ambiente.limiteCorpo }));
-console.log('Limite do corpo:', ambiente.limiteCorpo);
 app.use(rotas);
 app.use(rotaNaoEncontrada);
 app.use(tratarErros);
