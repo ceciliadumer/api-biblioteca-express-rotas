@@ -33,6 +33,6 @@ export const ambiente = {
     porta: lerPorta(),
     nodeEnv,
     emProducao: nodeEnv === 'production',
-    limiteCorpo: process.env.LIMITE_CORPO ?? '10kb',
+    limiteCorpo: process.env.LIMITE_CORPO ?? '100kb',
 
 }
