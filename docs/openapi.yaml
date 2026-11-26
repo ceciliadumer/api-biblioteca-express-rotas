@@ -1,0 +1,197 @@
+openapi: 3.0.3
+
+info:
+  title: API de Produtos
+  version: 1.0.0
+  description: API RESTful da disciplina Desenvolvimento Backend II.
+
+servers:
+  - url: http://localhost:3000
+    description: Desenvolvimento
+    
+tags:
+- name: Produtos
+  description: Cadastro e consulta de produtos
+
+components:
+  schemas:
+    Produto:
+      type: object
+      required: [id, nome, preco, estoque]
+      properties:
+        id: { type: integer, readOnly: true, example: 1 }
+        nome: { type: string, example: Notebook }
+        preco: { type: number, example: 3500 }
+        estoque: { type: integer, example: 10 }
+        descricao: { type: string, example: Notebook para estudos }
+
+    ProdutoNovo:
+      type: object
+      required: [nome, preco]
+      properties:
+        nome: { type: string, example: Teclado }
+        preco: { type: number, example: 250 }
+        estoque: { type: integer, default: 0, example: 30 }
+        descricao: { type: string }
+
+    ProdutoParcial:
+      type: object
+      properties:
+        nome: { type: string }
+        preco: { type: number, example: 4200 }
+        estoque: { type: integer }
+        descricao: { type: string }
+
+    PaginaProdutos:
+      type: object
+      properties:
+        dados:
+          type: array
+          items: { $ref: '#/components/schemas/Produto' }
+        total: { type: integer, example: 6 }
+        pagina: { type: integer, example: 1 }
+        limite: { type: integer, example: 10 }
+
+    Erro:
+      type: object
+      required: [erro]
+      properties:
+        erro: { type: string, example: Produto não encontrado }
+
+  parameters:
+    IdProduto:
+      in: path
+      name: id
+      required: true
+      description: Identificador do produto
+      schema: { type: integer, minimum: 1, example: 1 }
+
+  responses:
+    RequisicaoInvalida:
+      description: Parâmetro malformado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    NaoEncontrado:
+      description: Produto não encontrado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    TipoNaoSuportado:
+      description: O corpo não foi enviado como application/json
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    EntidadeInvalida:
+      description: Corpo com campos ausentes ou de tipo inválido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+
+paths:
+  /produtos:
+    get:
+      tags: [Produtos]
+      operationId: listarProdutos
+      summary: Lista os produtos, com filtros e paginação
+      parameters:
+        - { in: query, name: busca, schema: { type: string } }
+        - { in: query, name: precoMin, schema: { type: number } }
+        - { in: query, name: precoMax, schema: { type: number } }
+        - { in: query, name: ordem, schema: { type: string, enum: [nome, preco, estoque] } }
+        - { in: query, name: direcao, schema: { type: string, enum: [asc, desc], default: asc } }
+        - { in: query, name: pagina, schema: { type: integer, minimum: 1, default: 1 } }
+        - { in: query, name: limite, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
+      responses:
+        '200':
+          description: Página de produtos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginaProdutos' }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+
+    post:
+      tags: [Produtos]
+      operationId: criarProduto
+      summary: Cria um produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoNovo' }
+      responses:
+        '201':
+          description: Produto criado
+          headers:
+            Location:
+              description: URI do novo produto
+              schema: { type: string, example: /produtos/7 }
+        content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Produto' }
+    '415': { $ref: '#/components/responses/TipoNaoSuportado' }
+    '422': { $ref: '#/components/responses/EntidadeInvalida' }
+
+  /produtos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdProduto'
+    get:
+      tags: [Produtos]
+      operationId: buscarProduto
+      summary: Busca um produto pelo id
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    put:
+      tags: [Produtos]
+      operationId: substituirProduto
+      summary: Substitui um produto por completo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoNovo' }
+      responses:
+        '200':
+          description: Produto substituído
+          content:
+            application/json:
+            schema: { $ref: '#/components/schemas/Produto' }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '415': { $ref: '#/components/responses/TipoNaoSuportado' }
+        '422': { $ref: '#/components/responses/EntidadeInvalida' }
+
+    patch:
+      tags: [Produtos]
+      operationId: atualizarProduto
+      summary: Atualiza parcialmente um produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoParcial' }
+      responses:
+        '200':
+          description: Produto atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+        '415': { $ref: '#/components/responses/TipoNaoSuportado' }
+        '422': { $ref: '#/components/responses/EntidadeInvalida' }
+    delete:
+      tags: [Produtos]
+      operationId: removerProduto
+      summary: Exclui um produto
+      responses:
+        '204':
+          description: Produto excluído
+        '400': { $ref: '#/components/responses/RequisicaoInvalida' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }

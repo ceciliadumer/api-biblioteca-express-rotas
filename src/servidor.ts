@@ -1,10 +1,9 @@
-import express, { type Request, type Response } from "express";
-import {app} from './app'
+import { app } from './app';
+import { ambiente } from './config/ambiente';
 
 
-const PORTA = 3000;
 
-app.listen(PORTA, () => {
-  console.log(`Servidor rodando em http://localhost${PORTA}`);
+app.listen(ambiente.porta, () => {
+  console.log(`Servidor rodando em http://localhost:${ambiente.porta} (${ambiente.nodeEnv})`);
 });
 
