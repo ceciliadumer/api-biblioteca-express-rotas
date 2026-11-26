@@ -139,24 +139,24 @@ export function substituirProduto(req: Request<{ id: string }>, res: Response) {
 }
 
 export function atualizarProduto(req: Request<{ id: string }>, res: Response): void {
-  const id = lerId(req.params.id);
-  const body: unknown = ehProdutoParcial(req.params);
+    const id = lerId(req.params.id);
+    const body: unknown = req.body;
 
-  if (!id) {
-    throw new ErroHttp(HttpStatus.badRequest, 'Id inválido');
-  }
+    if (id === undefined) {
+        throw new ErroHttp(HttpStatus.badRequest, 'Id inválido');
+    }
 
-  if (!body) {
-    throw new ErroHttp(HttpStatus.invalidEntity, 'corpo inválido')
-  }
+    if (!ehProdutoParcial(body)) {
+        throw new ErroHttp(HttpStatus.invalidEntity, 'Corpo inválido');
+    }
 
-  const produtoAtualizado = repositorioProduto.atualizar(id, body);
+    const produtoAtualizado = repositorioProduto.atualizar(id, body);
 
-  if (!produtoAtualizado) {
-    throw new ErroHttp(HttpStatus.notFound, 'produto não encontrado');
-  }
+    if (!produtoAtualizado) {
+        throw new ErroHttp(HttpStatus.notFound, 'Produto não encontrado');
+    }
 
-  res.status(HttpStatus.ok).json(produtoAtualizado);
+    res.status(HttpStatus.ok).json(produtoAtualizado);
 }
 
 export function remover(req: Request<{ id: string }>, res: Response): void {

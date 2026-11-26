@@ -13,21 +13,21 @@ export function lerId(text:String): number | undefined {
 }
 
 export function ehProdutoParcial(valor: unknown): valor is ProdutoParcial {
-    if (typeof valor !== 'object' || valor == null) {
+    if (typeof valor !== 'object' || valor === null) {
         return false;
     }
 
-    const candidado = valor as Record<string, unknown>;
+    const candidato = valor as Record<string, unknown>;
 
     return (
-        (candidado.nome === String || candidado.nome === undefined) &&
-        (candidado.preco === Number || candidado.preco === undefined) &&
-        (candidado.estoque === Number || candidado.estoque === undefined)
-    )
+        (typeof candidato.nome === 'string' || candidato.nome === undefined) &&
+        (typeof candidato.preco === 'number' || candidato.preco === undefined) &&
+        (typeof candidato.estoque === 'number' || candidato.estoque === undefined)
+    );
 }
 
 export function ehProdutoNovo(valor:unknown): valor is ProdutoNovo {
-    if (typeof valor !== 'object' || valor == null) {
+    if (typeof valor !== 'object' || valor === null) {
         return false;
     }
 

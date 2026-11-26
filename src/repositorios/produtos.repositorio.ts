@@ -58,14 +58,19 @@ export function atualizar(
   id: number,
   dados: ProdutoParcial,
 ): Produto | undefined {
-  const produto = buscarId(id);
 
-  if (produto === undefined) {
+  const indice = produtos.findIndex((p) => p.id === id);
+
+  if (indice === -1) {
     return undefined;
   }
 
-  const produtoAtualizado: Produto = { ...produto, ...dados, id };
-  produtos[produto.id] = produtoAtualizado;
+  const produtoAtualizado: Produto = {
+    ...produtos[indice],
+    ...dados,
+    id,
+  };
+  produtos[indice] = produtoAtualizado;
   return produtoAtualizado;
 }
 
@@ -73,14 +78,17 @@ export function substituir(
   id: number,
   dados: ProdutoNovo,
 ): Produto | undefined {
-  const produto = produtos.find((obj) => obj.id === Number(id));
+  const indice = produtos.findIndex((p) => p.id === id);
 
-  if (!produto) {
+  if (indice === -1) {
     return undefined;
   }
 
-  produtos[produto.id] = { id: produto.id, ...dados };
-  return produtos[produto.id];
+  produtos[indice] = {
+    id,
+    ...dados,
+  };
+  return produtos[indice];
 }
 
 export function pesquisar(filtros: FiltrosProduto): Pagina<Produto> {
